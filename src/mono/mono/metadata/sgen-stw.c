@@ -36,6 +36,14 @@
 #pragma warning(disable:4312) // FIXME pointer cast to different size
 #endif
 
+MONO_API void mono_set_gc_start_stop_notification_function(void (*func) (uint8_t));
+static void (*GCStartStopNotificationFunction) (uint8_t) = NULL;
+
+void mono_set_gc_start_stop_notification_function(void (*func) (uint8_t))
+{
+	GCStartStopNotificationFunction = func;
+}
+
 #define TV_DECLARE SGEN_TV_DECLARE
 #define TV_GETTIME SGEN_TV_GETTIME
 #define TV_ELAPSED SGEN_TV_ELAPSED
@@ -152,6 +160,9 @@ sgen_client_stop_world (int generation, gboolean serial_collection)
 	/* We start to scan after locks are taking, this ensures we won't be interrupted. */
 	sgen_process_togglerefs ();
 
+	if (GCStartStopNotificationFunction != NULL)
+		GCStartStopNotificationFunction(0);
+
 	sgen_global_stop_count++;
 	SGEN_LOG (3, "stopping world n %d from %p %p", sgen_global_stop_count, mono_thread_info_current (), (gpointer) (gsize) mono_native_thread_id_get ());
 	TV_GETTIME (stop_world_time);
@@ -203,6 +214,9 @@ sgen_client_restart_world (int generation, gboolean serial_collection, gint64 *s
 	} FOREACH_THREAD_END
 
 	TV_GETTIME (start_handshake);
+
+	if (GCStartStopNotificationFunction != NULL)
+		GCStartStopNotificationFunction(1);	
 
 	unified_suspend_restart_world (MONO_THREAD_INFO_FLAGS_NO_GC, sgen_client_stop_world_thread_restarted_callback);
 
