@@ -600,19 +600,13 @@ MONO_API char     *mono_pmip_u                       (void *ip);
 MONO_API int mono_ee_api_version (void);
 gboolean  mono_debug_count                  (void);
 
-#ifdef __linux__
 /* maybe enable also for other systems? */
 #define ENABLE_JIT_MAP 1
+MONO_API void mono_enable_jit_map_file (const char *name);
 void mono_enable_jit_map (void);
 void mono_emit_jit_map   (MonoJitInfo *jinfo);
 void mono_emit_jit_tramp (void *start, int size, const char *desc);
 gboolean mono_jit_map_is_enabled (void);
-#else
-#define mono_enable_jit_map()
-#define mono_emit_jit_map(ji)
-#define mono_emit_jit_tramp(s,z,d) do { } while (0) /* non-empty to avoid warning */
-#define mono_jit_map_is_enabled() (0)
-#endif
 
 void mono_enable_jit_dump (void);
 void mono_emit_jit_dump (MonoJitInfo *jinfo, gpointer code);
